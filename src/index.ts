@@ -21,12 +21,26 @@ import { seedDatabase } from "./config/seed.js";
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Define allowed origins for CORS and Better Auth
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://study-sprint-ai-agent-client.vercel.app",
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
 // Enable CORS with credentials for Better Auth session cookies
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
-  })
+  }),
 );
 
 app.use(express.json());
@@ -44,14 +58,14 @@ app.all("/api/auth/{*path}", (req, res) => {
 });
 
 // ─── API Routes ──────────────────────────────────────────────────────────────
-app.use("/api/landing",      landingRoutes);       // landing page data
-app.use("/api/courses",      coursesRoutes);       // GET list, GET/manage, POST create, DELETE
-app.use("/api/courses",      courseDetailsRoutes); // GET/:id, POST/:id/enroll, POST/:id/reviews, GET/:id/related
-app.use("/api/enrollments",  enrollmentsRoutes);   // GET, POST, PATCH progress, GET /check
-app.use("/api/reviews",      reviewsRoutes);       // GET, POST, DELETE
-app.use("/api/dashboard",    dashboardRoutes);     // GET dashboard data, POST recommendations
-app.use("/api/profile",      profileRoutes);       // GET, PUT, POST change-password
-app.use("/api/ai",           aiRoutes);            // Feature A: generate-content, B: recommendations+log, C: chat
+app.use("/api/landing", landingRoutes); // landing page data
+app.use("/api/courses", coursesRoutes); // GET list, GET/manage, POST create, DELETE
+app.use("/api/courses", courseDetailsRoutes); // GET/:id, POST/:id/enroll, POST/:id/reviews, GET/:id/related
+app.use("/api/enrollments", enrollmentsRoutes); // GET, POST, PATCH progress, GET /check
+app.use("/api/reviews", reviewsRoutes); // GET, POST, DELETE
+app.use("/api/dashboard", dashboardRoutes); // GET dashboard data, POST recommendations
+app.use("/api/profile", profileRoutes); // GET, PUT, POST change-password
+app.use("/api/ai", aiRoutes); // Feature A: generate-content, B: recommendations+log, C: chat
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get("/api/health", (_req, res) => {
@@ -59,7 +73,17 @@ app.get("/api/health", (_req, res) => {
     status: "ok",
     message: "StudySprint API is running",
     version: "1.0.0",
-    features: ["auth", "courses", "enrollments", "reviews", "dashboard", "profile", "ai-content", "ai-recommendations", "ai-chat"],
+    features: [
+      "auth",
+      "courses",
+      "enrollments",
+      "reviews",
+      "dashboard",
+      "profile",
+      "ai-content",
+      "ai-recommendations",
+      "ai-chat",
+    ],
   });
 });
 
@@ -69,8 +93,12 @@ async function startServer() {
     await connectDB();
     await seedDatabase();
     app.listen(PORT, () => {
-      console.log(`[server]: StudySprint API running at http://localhost:${PORT}`);
-      console.log(`[server]: AI features: Content Generator ✓ | Recommendations ✓ | Chat Advisor ✓`);
+      console.log(
+        `[server]: StudySprint API running at http://localhost:${PORT}`,
+      );
+      console.log(
+        `[server]: AI features: Content Generator ✓ | Recommendations ✓ | Chat Advisor ✓`,
+      );
     });
   } catch (error) {
     console.error("Failed to start server:", error);

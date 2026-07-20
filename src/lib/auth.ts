@@ -10,7 +10,9 @@ export function getAuth(): any {
   }
 
   if (mongoose.connection.readyState !== 1) {
-    throw new Error("Mongoose must be connected to MongoDB before initializing Better Auth.");
+    throw new Error(
+      "Mongoose must be connected to MongoDB before initializing Better Auth.",
+    );
   }
 
   const client = mongoose.connection.getClient();
@@ -30,7 +32,15 @@ export function getAuth(): any {
         clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
       },
     },
-    secret: process.env.BETTER_AUTH_SECRET || "default_auth_secret_for_development_purposes",
+    secret:
+      process.env.BETTER_AUTH_SECRET ||
+      "default_auth_secret_for_development_purposes",
+    trustedOrigins: [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "https://study-sprint-ai-agent-client.vercel.app",
+      process.env.CLIENT_URL || "",
+    ].filter(Boolean),
   });
 
   return authInstance;
