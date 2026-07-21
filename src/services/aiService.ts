@@ -73,7 +73,7 @@ export const openai = new OpenAI({
   },
 });
 
-const DEFAULT_MODEL = "google/gemma-3-27b-it:free";
+const DEFAULT_MODEL = "openrouter/free";
 
 interface GenerateOptions {
   model?: string;
